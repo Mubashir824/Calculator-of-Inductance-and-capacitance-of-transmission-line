@@ -1,0 +1,715 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>Transmission Line Calculator | Power Systems Analysis</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet" />
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet" />
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link href="static/style.css" rel="stylesheet" />
+</head>
+<body class="bg-gradient-dark">
+    <!-- Header -->
+    <nav class="navbar navbar-dark navbar-glass">
+        <div class="container-fluid">
+            <span class="navbar-brand mb-0 h1">
+                <i class="fas fa-bolt me-2 text-warning"></i>
+                Transmission Line Calculator
+            </span>
+            <div class="navbar-text">
+                <small class="text-light">Power Systems Analysis</small>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container-fluid py-4">
+        <div class="row g-4">
+            <!-- Configuration Panel -->
+            <div class="col-lg-6">
+                <div class="card glass-card config-panel">
+                    <div class="card-header bg-transparent border-bottom border-secondary">
+                        <h5 class="card-title mb-0">
+                            <i class="fas fa-cog me-2 text-primary"></i>
+                            Transmission Line Configuration
+                        </h5>
+                    </div>
+                    <div class="card-body">
+                        <form id="calc-form" novalidate>
+                            <!-- Circuit Configuration -->
+                            <div class="config-section">
+                                <h6 class="section-title">
+                                    <i class="fas fa-project-diagram me-2"></i>
+                                    Circuit Configuration
+                                </h6>
+                                <div class="row g-3">
+                                    <div class="col-md-6">
+                                        <label class="form-label">Circuit Type</label>
+                                        <div class="input-group">
+                                            <span class="input-group-text"><i class="fas fa-network-wired"></i></span>
+                                            <select class="form-select form-select-lg" id="circuitType" required>
+                                                <option value="1" selected>3 Phase Single Circuit</option>
+                                                <option value="2">3 Phase Double Circuit</option>
+                                            </select>
+                                        </div>
+                                    </div>
+
+                                    <div class="col-md-6">
+                                        <label class="form-label">Geometry Type</label>
+                                        <div class="input-group">
+                                            <span class="input-group-text"><i class="fas fa-shapes"></i></span>
+                                            <select class="form-select form-select-lg" id="geometrySubtype" required>
+                                                <!-- Options dynamically updated by JS -->
+                                            </select>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Geometry Distances -->
+                            <div class="config-section">
+                                <h6 class="section-title">
+                                    <i class="fas fa-ruler-combined me-2"></i>
+                                    Geometry Distances (feet)
+                                </h6>
+                                <div class="row g-2">
+                                    <div class="col">
+                                        <input class="form-control distance-input" id="d1" type="number" step="any" min="0.1" placeholder="D1" required>
+                                        <small class="form-text text-muted" id="d1Label">D_AB</small>
+                                    </div>
+                                    <div class="col">
+                                        <input class="form-control distance-input" id="d2" type="number" step="any" min="0.1" placeholder="D2" required>
+                                        <small class="form-text text-muted" id="d2Label">D_BC</small>
+                                    </div>
+                                    <div class="col">
+                                        <input class="form-control distance-input" id="d3" type="number" step="any" min="0.1" placeholder="D3" required>
+                                        <small class="form-text text-muted" id="d3Label">D_CA</small>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Conductor Configuration -->
+                            <div class="config-section">
+                                <h6 class="section-title">
+                                    <i class="fas fa-wire me-2"></i>
+                                    Conductor Configuration
+                                </h6>
+                                
+                                <!-- Bundling Toggle -->
+                                <div class="bundling-toggle mb-3">
+                                    <label class="form-label">Bundled Conductor</label>
+                                    <div class="toggle-group">
+                                        <input type="radio" class="btn-check" name="bundledRadio" id="bundledNo" value="no" checked>
+                                        <label class="btn btn-toggle" for="bundledNo">
+                                            <i class="fas fa-times me-1"></i> No
+                                        </label>
+                                        
+                                        <input type="radio" class="btn-check" name="bundledRadio" id="bundledYes" value="yes">
+                                        <label class="btn btn-toggle" for="bundledYes">
+                                            <i class="fas fa-check me-1"></i> Yes
+                                        </label>
+                                    </div>
+                                </div>
+
+                                <!-- Bundle Options -->
+                                <div id="bundleOptions" class="bundle-options" style="display: none">
+                                    <div class="row g-3">
+                                        <div class="col-md-6">
+                                            <label class="form-label">Bundle Shape</label>
+                                            <select class="form-select" id="bundleShape">
+                                                <option value="">Select Shape</option>
+                                                <option value="1">Horizontal</option>
+                                                <option value="2">Triangular</option>
+                                                <option value="3">Square</option>
+                                            </select>
+                                        </div>
+                                        <div class="col-md-6">
+                                            <label class="form-label">Bundle Spacing (ft)</label>
+                                            <input class="form-control" id="bundleSpacing" type="number" step="any" min="0.001">
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- Conductor Type -->
+                                <div class="row mt-3">
+                                    <div class="col-md-6">
+                                        <label class="form-label">Conductor Type</label>
+                                        <select class="form-select" id="conductorType" required>
+                                            <option value="Dove">Dove</option>
+                                            <option value="Drake">Drake</option>
+                                            <option value="Partridge">Partridge</option>
+                                            <option value="Ostrich">Ostrich</option>
+                                            <option value="Hawk">Hawk</option>
+                                            <option value="Rook">Rook</option>
+                                            <option value="Finch">Finch</option>
+                                            <option value="Pheasant">Pheasant</option>
+                                            <option value="Falcon">Falcon</option>
+                                            <option value="Custom">Custom</option>
+                                        </select>
+                                    </div>
+                                </div>
+
+                                <!-- Custom Conductor -->
+                                <div class="row mt-3 d-none" id="customConductor">
+                                    <label class="form-label">Custom Conductor Details</label>
+                                    <div class="row g-2">
+                                        <div class="col-6">
+                                            <input type="number" placeholder="Resistance (Ω/1000ft)" class="form-control" id="customResistance">
+                                        </div>
+                                        <div class="col-6">
+                                            <input type="number" placeholder="Radius (ft)" class="form-control" id="customRadius">
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- System Parameters -->
+                            <div class="config-section">
+                                <h6 class="section-title">
+                                    <i class="fas fa-sliders-h me-2"></i>
+                                    System Parameters
+                                </h6>
+                                
+                                <div class="row g-3">
+                                    <div class="col-md-6">
+                                        <label class="form-label">Line Length (km)</label>
+                                        <input class="form-control" id="lengthKm" type="number" step="any" min="0.01" placeholder="e.g., 100" required>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <label class="form-label">Frequency (Hz)</label>
+                                        <input class="form-control" id="freqHz" type="number" step="any" min="1" placeholder="e.g., 60" required>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Receiving End -->
+                            <div class="config-section">
+                                <h6 class="section-title">
+                                    <i class="fas fa-plug me-2"></i>
+                                    Receiving End Parameters
+                                </h6>
+                                
+                                <div class="row g-2 mb-2">
+                                    <div class="col-4">
+                                        <input class="form-control" id="V_L_kV" type="number" step="any" placeholder="Voltage (kV)" required>
+                                    </div>
+                                    <div class="col-4">
+                                        <input class="form-control" id="P_MW" type="number" step="any" placeholder="Power (MW)" required>
+                                    </div>
+                                    <div class="col-4">
+                                        <input class="form-control" id="pf" type="number" step="any" min="0" max="1" placeholder="Power Factor" required>
+                                    </div>
+                                </div>
+
+                                <div class="power-factor-toggle">
+                                    <div class="form-check form-check-inline">
+                                        <input class="form-check-input" type="radio" name="pfType" id="pfLagging" value="lagging" checked>
+                                        <label class="form-check-label" for="pfLagging">
+                                            <i class="fas fa-angle-down me-1"></i> Lagging
+                                        </label>
+                                    </div>
+                                    <div class="form-check form-check-inline">
+                                        <input class="form-check-input" type="radio" name="pfType" id="pfLeading" value="leading">
+                                        <label class="form-check-label" for="pfLeading">
+                                            <i class="fas fa-angle-up me-1"></i> Leading
+                                        </label>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Calculate Button -->
+                            <div class="d-grid gap-2 mt-4">
+                                <button id="runBtn" type="submit" class="btn btn-primary btn-lg calculate-btn">
+                                    <i class="fas fa-calculator me-2"></i>
+                                    Calculate Transmission Parameters
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Visualization Panel -->
+            <div class="col-lg-6">
+                <div class="card glass-card visualization-panel">
+                    <div class="card-header bg-transparent border-bottom border-secondary">
+                        <h5 class="card-title mb-0">
+                            <i class="fas fa-eye me-2 text-info"></i>
+                            Configuration Visualization
+                        </h5>
+                    </div>
+                    <div class="card-body text-center">
+                        <div class="visualization-container">
+                            <img src="images/2.png" class="configuration-image" id="rightImg" alt="Transmission Line Configuration">
+                        </div>
+                        <div class="configuration-info mt-3">
+                            <h6 id="configTitle" class="text-light">3 Phase Single Circuit - Colinear</h6>
+                            <p id="configDescription" class="text-muted small">Standard three-phase transmission line configuration with colinear geometry</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Quick Stats -->
+                <div class="row mt-4">
+                    <div class="col-md-4">
+                        <div class="stat-card">
+                            <div class="stat-icon text-primary">
+                                <i class="fas fa-bolt"></i>
+                            </div>
+                            <div class="stat-content">
+                                <h6>Power Flow</h6>
+                                <span class="stat-value">132 kV</span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="stat-card">
+                            <div class="stat-icon text-success">
+                                <i class="fas fa-long-arrow-alt-right"></i>
+                            </div>
+                            <div class="stat-content">
+                                <h6>Line Length</h6>
+                                <span class="stat-value">100 km</span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="stat-card">
+                            <div class="stat-icon text-warning">
+                                <i class="fas fa-tachometer-alt"></i>
+                            </div>
+                            <div class="stat-content">
+                                <h6>Efficiency</h6>
+                                <span class="stat-value">~98%</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Results Modal -->
+    <div class="modal fade" id="resultsModal" tabindex="-1">
+        <div class="modal-dialog modal-xl modal-dialog-scrollable">
+            <div class="modal-content glass-card">
+                <div class="modal-header border-bottom border-secondary">
+                    <h5 class="modal-title">
+                        <i class="fas fa-chart-line me-2 text-success"></i>
+                        Calculation Results
+                    </h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                </div>
+
+                <div class="modal-body" id="modalResults">
+                    <!-- Results will be populated here -->
+                </div>
+
+                <div class="modal-footer border-top border-secondary">
+                    <button class="btn btn-outline-light" data-bs-dismiss="modal">
+                        <i class="fas fa-times me-1"></i> Close
+                    </button>
+                    <button class="btn btn-primary" onclick="window.print()">
+                        <i class="fas fa-print me-1"></i> Print Report
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        // All your existing JavaScript functionality remains exactly the same
+        // Only the CSS classes and structure have been updated
+        // The original JavaScript code from your file goes here...
+        
+        // --- Update geometry subtype based on circuit type ---
+        function updateGeometryOptions() {
+            const type = document.getElementById("circuitType").value;
+            const geoSelect = document.getElementById("geometrySubtype");
+            geoSelect.innerHTML = "";
+
+            if (type === "1") {
+                geoSelect.innerHTML = `<option value="1">Colinear</option><option value="2">Triangular</option>`;
+                document.getElementById("d1").placeholder = "D_AB";
+                document.getElementById("d2").placeholder = "D_BC";
+                document.getElementById("d3").placeholder = "D_CA";
+                // Update labels
+                document.getElementById("d1Label").textContent = "D_AB";
+                document.getElementById("d2Label").textContent = "D_BC";
+                document.getElementById("d3Label").textContent = "D_CA";
+            } else {
+                geoSelect.innerHTML = `<option value="1">Vertical / Aligned</option><option value="2">Staggered / Offset</option>`;
+                document.getElementById("d1").placeholder = "D_AC'";
+                document.getElementById("d2").placeholder = "D_BB'";
+                document.getElementById("d3").placeholder = "D_AC";
+                // Update labels
+                document.getElementById("d1Label").textContent = "D_AC'";
+                document.getElementById("d2Label").textContent = "D_BB'";
+                document.getElementById("d3Label").textContent = "D_AC";
+            }
+            updateConfigInfo();
+        }
+
+        function updateConfigInfo() {
+            const circuitType = document.getElementById("circuitType").value;
+            const geometryType = document.getElementById("geometrySubtype").value;
+            
+            let title = "";
+            let description = "";
+            
+            if (circuitType == "1") {
+                title = "3 Phase Single Circuit";
+                description = geometryType == "1" ? 
+                    "Colinear geometry with equally spaced conductors" : 
+                    "Triangular geometry with triangular conductor arrangement";
+            } else {
+                title = "3 Phase Double Circuit";
+                description = geometryType == "1" ?
+                    "Vertical aligned configuration with symmetrical spacing" :
+                    "Staggered offset configuration for reduced interference";
+            }
+            
+            document.getElementById("configTitle").textContent = title;
+            document.getElementById("configDescription").textContent = description;
+        }
+
+        document.getElementById("circuitType").addEventListener("change", updateGeometryOptions);
+        document.getElementById("geometrySubtype").addEventListener("change", updateConfigInfo);
+        window.addEventListener("load", updateGeometryOptions);
+
+        // --- Handle bundled / non-bundled toggle ---
+        document.querySelectorAll('input[name="bundledRadio"]').forEach((el) => {
+            el.addEventListener("change", (e) => {
+                const isBundled = e.target.value === "yes";
+                const opts = document.getElementById("bundleOptions");
+                const spacing = document.getElementById("bundleSpacing");
+                const shape = document.getElementById("bundleShape");
+
+                if (isBundled) {
+                    opts.style.display = "block";
+                    spacing.disabled = false;
+                    shape.disabled = false;
+                    spacing.required = true;
+                } else {
+                    // hide + clear + disable fields
+                    opts.style.display = "none";
+                    spacing.value = "";
+                    shape.selectedIndex = 0;
+                    spacing.disabled = true;
+                    shape.disabled = true;
+                    spacing.required = false;
+                }
+            });
+        });
+
+        // --- Helper to safely read numeric values ---
+        function val(id) {
+            const el = document.getElementById(id);
+            const v = el ? el.value.trim() : "";
+            return v === "" || isNaN(v) ? null : parseFloat(v);
+        }
+
+        // --- Handle form submission ---
+        document.getElementById("calc-form").addEventListener("submit", async function (ev) {
+            ev.preventDefault();
+            const runBtn = document.getElementById("runBtn");
+            runBtn.disabled = true;
+            runBtn.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i> Calculating...';
+
+            const bundled = document.getElementById("bundledYes").checked;
+            const payload = {
+                circuit_type: parseInt(document.getElementById("circuitType").value),
+                geometry_subtype: parseInt(document.getElementById("geometrySubtype").value),
+                d1: val("d1"),
+                d2: val("d2"),
+                d3: val("d3"),
+                bundled: bundled,
+                bundle_shape: bundled ? parseInt(document.getElementById("bundleShape").value) : null,
+                bundle_spacing_ft: bundled ? val("bundleSpacing") : null,
+                conductor_type: document.getElementById("conductorType").value,
+                custom_resistance: Number(document.getElementById("customResistance").value),
+                custom_radius: Number(document.getElementById("customRadius").value),
+                length_km: val("lengthKm"),
+                freq_hz: val("freqHz"),
+                V_L_kV: val("V_L_kV"),
+                P_MW: val("P_MW"),
+                pf: val("pf"),
+                pf_lagging: document.getElementById("pfLagging").checked,
+            };
+
+            // quick check for missing required fields
+            for (const [k, v] of Object.entries(payload)) {
+                if (!bundled && (k === "bundle_shape" || k === "bundle_spacing_ft")) continue;
+                if ((v === null || v === undefined) && typeof v !== "boolean") {
+                    alert(`❗ Please enter a valid value for "${k}"`);
+                    runBtn.disabled = false;
+                    runBtn.innerHTML = '<i class="fas fa-calculator me-2"></i> Calculate Transmission Parameters';
+                    return;
+                }
+            }
+
+            try {
+                const resp = await fetch("/calculate", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify(payload),
+                });
+                if (!resp.ok) {
+                    const txt = await resp.text();
+                    throw new Error(`Server error: ${txt}`);
+                }
+                const data = await resp.json();
+                displayResults(data);
+            } catch (err) {
+                alert("Calculation error: " + err.message);
+            } finally {
+                runBtn.disabled = false;
+                runBtn.innerHTML = '<i class="fas fa-calculator me-2"></i> Calculate Transmission Parameters';
+            }
+        });
+
+        // --- Render results ---
+        function displayResults(data) {
+            const perf = data.performance;
+
+            const html = `
+                <div class="row">
+                    <div class="col-md-6">
+                        <div class="result-section">
+                            <h6 class="section-title text-success">
+                                <i class="fas fa-image me-2"></i>Configuration
+                            </h6>
+                            <img src="${data.image_url}" class="result-image" alt="Configuration" />
+                        </div>
+                        
+                        <div class="result-section mt-4">
+                            <h6 class="section-title text-primary">
+                                <i class="fas fa-wave-square me-2"></i>Line Parameters
+                            </h6>
+                            <div class="parameters-grid">
+                                <div class="param-item">
+                                    <span class="param-label">Inductance:</span>
+                                    <span class="param-value">${data.L_per_m_H.toExponential(6)} H/m</span>
+                                </div>
+                                <div class="param-item">
+                                    <span class="param-label">Capacitance:</span>
+                                    <span class="param-value">${data.C_per_m_F.toExponential(6)} F/m</span>
+                                </div>
+                                <div class="param-item">
+                                    <span class="param-label">Resistance:</span>
+                                    <span class="param-value">${data.R_per_mile_ohm.toFixed(6)} Ω/mile</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="col-md-6">
+                        <div class="result-section">
+                            <h6 class="section-title text-warning">
+                                <i class="fas fa-tachometer-alt me-2"></i>Performance Metrics
+                            </h6>
+                            <div class="metrics-grid">
+                                <div class="metric-card">
+                                    <div class="metric-icon bg-primary">
+                                        <i class="fas fa-bolt"></i>
+                                    </div>
+                                    <div class="metric-content">
+                                        <span class="metric-label">Sending Voltage</span>
+                                        <span class="metric-value">${perf.V_S_line_kV.toFixed(3)} kV</span>
+                                    </div>
+                                </div>
+                                <div class="metric-card">
+                                    <div class="metric-icon bg-success">
+                                        <i class="fas fa-chart-bar"></i>
+                                    </div>
+                                    <div class="metric-content">
+                                        <span class="metric-label">Apparent Power</span>
+                                        <span class="metric-value">${perf.Apparent_MVA.toFixed(3)} MVA</span>
+                                    </div>
+                                </div>
+                                <div class="metric-card">
+                                    <div class="metric-icon bg-info">
+                                        <i class="fas fa-percentage"></i>
+                                    </div>
+                                    <div class="metric-content">
+                                        <span class="metric-label">Power Factor</span>
+                                        <span class="metric-value">${(perf.pf_sending * 100).toFixed(2)}%</span>
+                                    </div>
+                                </div>
+                                <div class="metric-card">
+                                    <div class="metric-icon bg-warning">
+                                        <i class="fas fa-battery-half"></i>
+                                    </div>
+                                    <div class="metric-content">
+                                        <span class="metric-label">Efficiency</span>
+                                        <span class="metric-value">${perf.efficiency_percent.toFixed(3)}%</span>
+                                    </div>
+                                </div>
+                                <div class="metric-card">
+                                    <div class="metric-icon bg-danger">
+                                        <i class="fas fa-exchange-alt"></i>
+                                    </div>
+                                    <div class="metric-content">
+                                        <span class="metric-label">Voltage Regulation</span>
+                                        <span class="metric-value">${perf.voltage_reg_percent.toFixed(3)}%</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="row mt-4">
+                    <div class="col-12">
+                        <div class="result-section">
+                            <h6 class="section-title text-info">
+                                <i class="fas fa-info-circle me-2"></i>Impedance Values
+                            </h6>
+                            <div class="row">
+                                <div class="col-md-4">
+                                    <div class="impedance-card">
+                                        <h6>Inductive Reactance</h6>
+                                        <span class="impedance-value">${perf.X_L_ohm.toFixed(3)} Ω</span>
+                                    </div>
+                                </div>
+                                <div class="col-md-4">
+                                    <div class="impedance-card">
+                                        <h6>Capacitive Reactance</h6>
+                                        <span class="impedance-value">${perf.X_C_ohm.toFixed(3)} Ω</span>
+                                    </div>
+                                </div>
+                                <div class="col-md-4">
+                                    <div class="impedance-card">
+                                        <h6>Total Resistance</h6>
+                                        <span class="impedance-value">${perf.R_total_ohm.toFixed(3)} Ω</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `;
+
+            document.getElementById("modalResults").innerHTML = html;
+
+            // Show modal
+            const modal = new bootstrap.Modal(document.getElementById("resultsModal"));
+            modal.show();
+        }
+
+        function enableDistanceSync() {
+            const type = document.getElementById("circuitType").value;
+            const subtype = document.getElementById("geometrySubtype").value;
+
+            const d1 = document.getElementById("d1");
+            const d2 = document.getElementById("d2");
+
+            // Remove any existing listeners first
+            d1.oninput = null;
+            d2.oninput = null;
+
+            // Only apply sync in the specific case
+            if (type === "2" && subtype === "1") {
+                d1.oninput = () => (d2.value = d1.value);
+                d2.oninput = () => (d1.value = d2.value);
+            }
+        }
+
+        // Re-check whenever either dropdown changes
+        document.getElementById("circuitType").addEventListener("change", enableDistanceSync);
+        document.getElementById("geometrySubtype").addEventListener("change", enableDistanceSync);
+
+        // Also run on load
+        window.addEventListener("load", enableDistanceSync);
+
+        function showCustomConductor() {
+            const isCustomConductor = document.getElementById("conductorType").value === "Custom";
+            if (isCustomConductor) {
+                document.getElementById("customConductor").classList.remove("d-none");
+            } else {
+                document.getElementById("customConductor").classList.add("d-none");
+            }
+        }
+
+        document.getElementById("conductorType").addEventListener("change", showCustomConductor);
+
+        // Image display logic (your original function)
+        function showConditionalImage() {
+            let image;
+
+            const circuitType = document.getElementById("circuitType").value;
+            const geometrySubtype = document.getElementById("geometrySubtype").value;
+            const bundleShape = document.getElementById("bundleShape").value;
+            const bundledNo = document.getElementById("bundledNo").checked;
+            const bundledYes = document.getElementById("bundledYes").checked;
+
+            if (circuitType == 1 && geometrySubtype == 1) {
+                image = "/images/2.png";
+            }
+            if (circuitType == 1 && geometrySubtype == 2) {
+                image = "/images/1.png";
+            }
+            if (circuitType == 2 && geometrySubtype == 1) {
+                image = "/images/3.png";
+            }
+            if (circuitType == 2 && geometrySubtype == 2) {
+                image = "/images/4.png";
+            }
+            if (circuitType == 1 && geometrySubtype == 1 && bundleShape == 1 && bundledYes) {
+                image = "/images/8.png";
+            }
+            if (circuitType == 1 && geometrySubtype == 1 && bundleShape == 2 && bundledYes) {
+                image = "/images/10.png";
+            }
+            if (circuitType == 1 && geometrySubtype == 1 && bundleShape == 3 && bundledYes) {
+                image = "/images/9.png";
+            }
+            if (circuitType == 1 && geometrySubtype == 2 && bundleShape == 1 && bundledYes) {
+                image = "/images/7.png";
+            }
+            if (circuitType == 1 && geometrySubtype == 2 && bundleShape == 2 && bundledYes) {
+                image = "/images/5.png";
+            }
+            if (circuitType == 1 && geometrySubtype == 2 && bundleShape == 3 && bundledYes) {
+                image = "/images/6.png";
+            }
+            if (circuitType == 2 && geometrySubtype == 1 && bundleShape == 1 && bundledYes) {
+                image = "/images/11.png";
+            }
+            if (circuitType == 2 && geometrySubtype == 1 && bundleShape == 2 && bundledYes) {
+                image = "/images/13.png";
+            }
+            if (circuitType == 2 && geometrySubtype == 1 && bundleShape == 3 && bundledYes) {
+                image = "/images/12.png";
+            }
+            if (circuitType == 2 && geometrySubtype == 2 && bundleShape == 1 && bundledYes) {
+                image = "/images/14.png";
+            }
+            if (circuitType == 2 && geometrySubtype == 2 && bundleShape == 2 && bundledYes) {
+                image = "/images/15.png";
+            }
+            if (circuitType == 2 && geometrySubtype == 2 && bundleShape == 3 && bundledYes) {
+                image = "/images/16.png";
+            }
+
+            document.getElementById("rightImg").src = image;
+            updateConfigInfo();
+        }
+
+        // Add event listeners for image updates
+        document.getElementById("circuitType").addEventListener("change", showConditionalImage);
+        document.getElementById("geometrySubtype").addEventListener("change", showConditionalImage);
+        document.getElementById("bundleShape").addEventListener("change", showConditionalImage);
+        document.getElementById("bundledNo").addEventListener("change", showConditionalImage);
+        document.getElementById("bundledYes").addEventListener("change", showConditionalImage);
+
+        // Initialize
+        window.addEventListener("load", function() {
+            updateGeometryOptions();
+            showConditionalImage();
+            updateConfigInfo();
+        });
+    </script>
+</body>
+</html>
