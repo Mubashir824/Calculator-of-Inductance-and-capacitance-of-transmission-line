@@ -30,7 +30,8 @@ IMAGE_MAP = {
 }
 from fastapi.staticfiles import StaticFiles
 
-app.mount("/images", StaticFiles(directory="backend/images"), name="images")
+app.mount("/images", StaticFiles(directory="images"), name="images")
+
 
 # Directories
 templates = Jinja2Templates(directory=os.path.join(BASE_DIR, "templates"))
@@ -370,3 +371,4 @@ async def calculate(payload: CalculateRequest):
     }
 
     return JSONResponse(content=response)
+
