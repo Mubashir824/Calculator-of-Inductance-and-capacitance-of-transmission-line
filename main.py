@@ -291,7 +291,7 @@ async def calculate(payload: CalculateRequest):
         cond = calc.conductor_data[payload.conductor_type]
     print(cond["radius_ft"])
     # convert resistance from ohm per 1000 ft -> ohm per mile
-    R_per_mile = cond["resistance_ohm_per_1000ft"] * (5280.0 / 1000.0)
+    R_per_mile = cond["resistance_ohm_per_1000ft"]
     radius_ft = cond["radius_ft"]
     radius_m = radius_ft * 0.3048
 
@@ -371,4 +371,5 @@ async def calculate(payload: CalculateRequest):
     }
 
     return JSONResponse(content=response)
+
 
